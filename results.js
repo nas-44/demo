@@ -31,62 +31,81 @@ const generateIndividualPoster = (imageSrc, posterData) => {
         logo.crossOrigin = "Anonymous";
         logo.src = 'new-logo.png';
         logo.onload = () => {
-            // --- Drawing logic remains the same ---
+            // --- Drawing logic with updated design ---
+
+            // 1. Background (Softer, more balanced gradient)
             const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            gradient.addColorStop(0, '#008080');
-            gradient.addColorStop(1, '#20B2AA');
+            gradient.addColorStop(0, '#ADD8E6'); // Light Blue
+            gradient.addColorStop(0.5, '#E0FFFF'); // Light Cyan
+            gradient.addColorStop(1, '#ADD8E6'); // Light Blue
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+            // 2. Decorative elements (subtle patterns/shapes)
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)'; // More subtle white overlay
             ctx.beginPath();
-            ctx.arc(canvas.width, canvas.height, 300, 0, Math.PI * 2);
+            ctx.moveTo(0, canvas.height * 0.7);
+            ctx.bezierCurveTo(canvas.width * 0.2, canvas.height * 0.6, canvas.width * 0.8, canvas.height * 0.8, canvas.width, canvas.height * 0.7);
+            ctx.lineTo(canvas.width, canvas.height);
+            ctx.lineTo(0, canvas.height);
+            ctx.closePath();
             ctx.fill();
 
-            const logoWidth = 120;
+            // 3. Fest Logo (top right)
+            const logoWidth = 150; // Slightly larger logo
             const logoHeight = (logo.height / logo.width) * logoWidth;
-            ctx.drawImage(logo, canvas.width - logoWidth - 60, 60, logoWidth, logoHeight);
+            ctx.drawImage(logo, canvas.width - logoWidth - 50, 50, logoWidth, logoHeight);
 
-            ctx.fillStyle = 'white';
+            // 4. "CONGRATULATIONS" Text
+            ctx.fillStyle = '#4682B4'; // Steel Blue for main text
             ctx.textAlign = 'center';
-            ctx.font = 'bold 130px Poppins, sans-serif';
+            ctx.font = 'bold 120px Poppins, sans-serif';
             ctx.fillText('CONGRAT', canvas.width / 2, 280);
             ctx.fillText('ULATIONS', canvas.width / 2, 400);
 
-            ctx.fillStyle = 'white';
-            ctx.font = 'bold 70px Poppins, sans-serif';
+            // 5. Winner Details
+            ctx.fillStyle = '#191970'; // Midnight Blue for name
+            ctx.font = 'bold 75px Poppins, sans-serif'; // Slightly larger name
             ctx.fillText(posterData.name, canvas.width / 2, 530);
 
             const prizeText = { '1st': 'First Prize', '2nd': 'Second Prize', '3rd': 'Third Prize' }[posterData.place] || posterData.place;
-            ctx.fillStyle = '#FFD700';
-            ctx.font = '50px Poppins, sans-serif';
-            ctx.fillText(prizeText, canvas.width / 2, 600);
-            ctx.fillStyle = 'white';
-            ctx.font = 'italic 45px Poppins, sans-serif';
-            ctx.fillText(posterData.competitionName, canvas.width / 2, 660);
+            ctx.fillStyle = '#FFD700'; // Gold color for prize
+            ctx.font = '60px Poppins, sans-serif'; // Larger prize text
+            ctx.fillText(prizeText, canvas.width / 2, 610); // Adjusted position
 
-            const imgY = 900;
-            const radius = 200;
+            ctx.fillStyle = '#6A5ACD'; // Slate Blue for competition name
+            ctx.font = 'italic 50px Poppins, sans-serif'; // Larger competition name
+            ctx.fillText(posterData.competitionName, canvas.width / 2, 680); // Adjusted position
+
+            // 6. Student Image in a Circle
+            const imgY = 950; // Lowered image position slightly
+            const radius = 220; // Slightly larger circle
             ctx.save();
             ctx.beginPath();
             ctx.arc(canvas.width / 2, imgY, radius, 0, Math.PI * 2);
-            ctx.strokeStyle = 'white';
-            ctx.lineWidth = 12;
+            ctx.strokeStyle = '#FFFFFF'; // White border for the circle
+            ctx.lineWidth = 15; // Thicker border
             ctx.stroke();
             ctx.clip();
             ctx.drawImage(studentImg, canvas.width / 2 - radius, imgY - radius, radius * 2, radius * 2);
             ctx.restore();
 
-            ctx.fillStyle = 'white';
-            ctx.font = '30px Poppins, sans-serif';
-            ctx.fillText('Hayathul Islam Higher Secondary Madrasa, Muringampurayi', canvas.width / 2, canvas.height - 80);
+            // 7. Madrasa Name (Footer) - BOLD and Larger
+            ctx.fillStyle = '#191970'; // Midnight Blue for footer text
+            ctx.textAlign = 'center';
+            ctx.font = 'bold 40px Poppins, sans-serif'; // BOLD and larger font size
+            ctx.fillText('HAYATHUL ISLAM HIGHER SECONDARY MADRASA,', canvas.width / 2, canvas.height - 80);
+            ctx.fillText('Muringampurayi, Mukkam', canvas.width / 2, canvas.height - 30); // Second line for madrasa name
 
+            // --- End Drawing ---
+
+            // 8. Trigger Download
             const link = document.createElement('a');
             link.download = `Congratulations - ${posterData.name}.png`;
             link.href = canvas.toDataURL('image/png');
             link.click();
         };
-        logo.onerror = () => alert("Error: Could not load the logo 'new-logo.png'.");
+        logo.onerror = () => alert("Error: Could not load the logo 'new-logo.png'. Make sure it's in the project folder.");
     };
     studentImg.src = imageSrc;
 };
@@ -283,7 +302,7 @@ const init = () => {
     // Event listeners for cropper and camera modals
     document.getElementById('crop-confirm-btn').addEventListener('click', () => {
         if (cropper) {
-            const croppedCanvas = cropper.getCroppedCanvas({ width: 400, height: 400 });
+            const croppedCanvas = cropper.getCroppedCanvas({ width: 440, height: 440 }); // Adjusted size for potential larger circle
             generateIndividualPoster(croppedCanvas.toDataURL(), tempPosterData);
             closeModal(cropperModal);
             tempPosterData = null;
