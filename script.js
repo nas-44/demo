@@ -82,7 +82,6 @@ const renderCompetitions = () => {
         compCard.innerHTML = `
             <h4>${comp.name}</h4>
             <div class="edit-delete-buttons">
-                <button class="generate-poster-btn" data-id="${comp.id}">Generate Poster</button>
                 <button class="${publishBtnClass}" data-id="${comp.id}">${publishBtnText}</button>
                 <button class="edit-comp-btn" data-id="${comp.id}">Edit Name</button>
                 <button class="delete-comp-btn" data-id="${comp.id}">Delete</button>
@@ -96,6 +95,7 @@ const renderCompetitions = () => {
     });
 };
 
+// MODIFIED: This function no longer renders the poster button in the admin panel.
 const renderResultRows = (competition) => {
     let html = '';
     const places = ['1st', '2nd', '3rd'];
@@ -115,6 +115,7 @@ const renderResultRows = (competition) => {
     });
     return html;
 };
+
 
 // --- Public View Logic ---
 
@@ -138,120 +139,49 @@ const calculateTeamScores = () => {
             }
         });
     });
-    return { teamScores, categoryScores };
+    const sortScores = scores => Object.entries(scores).sort(([, a], [, b]) => b - a);
+    return {
+        overall: sortScores(teamScores),
+        categories: Object.keys(categoryScores).reduce((acc, cat) => ({...acc, [cat]: sortScores(categoryScores[cat])}), {})
+    };
 };
 
 const renderPublicView = () => {
-    const { teamScores, categoryScores } = calculateTeamScores();
+    const scores = calculateTeamScores();
     resultsContainer.innerHTML = '';
-
-    // Overall Leaderboard
-    const overallTable = document.createElement('table');
-    overallTable.className = 'result-table';
-    overallTable.innerHTML = '<thead><tr><th>Rank</th><th>Team</th><th>Points</th></tr></thead><tbody></tbody>';
-    const sortedTeams = Object.entries(teamScores).sort((a, b) => b[1] - a[1]);
-    sortedTeams.forEach(([team, points], index) => {
-        const row = document.createElement('tr');
-        row.innerHTML = `<td>${index + 1}</td><td>${team}</td><td>${points}</td>`;
-        overallTable.querySelector('tbody').appendChild(row);
-    });
+    const createTable = (headers, rows) => {
+        const table = document.createElement('table');
+        table.className = 'result-table';
+        table.innerHTML = `
+            <thead><tr>${headers.map(h => `<th>${h}</th>`).join('')}</tr></thead>
+            <tbody>${rows.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('')}</tbody>
+        `;
+        return table;
+    };
     const overallSection = document.createElement('section');
-    overallSection.innerHTML = '<h3>Overall Leaderboard</h3>';
-    overallSection.appendChild(overallTable);
+    overallSection.innerHTML = '<h3>Overall Team Leaderboard</h3>';
+    if (scores.overall.length > 0 && scores.overall.some(s => s[1] > 0)) {
+        const rows = scores.overall.map(([team, score], i) => [i + 1, team, score]);
+        overallSection.appendChild(createTable(['Rank', 'Team', 'Score'], rows));
+    } else {
+        overallSection.innerHTML += '<p class="no-results-msg">No published results to display.</p>';
+    }
     resultsContainer.appendChild(overallSection);
-
-    // Category Leaderboards
-    Object.entries(categoryScores).forEach(([category, scores]) => {
-        const categoryTable = document.createElement('table');
-        categoryTable.className = 'result-table';
-        categoryTable.innerHTML = '<thead><tr><th>Rank</th><th>Team</th><th>Points</th></tr></thead><tbody></tbody>';
-        const sortedCategoryTeams = Object.entries(scores).sort((a, b) => b[1] - a[1]);
-        sortedCategoryTeams.forEach(([team, points], index) => {
-            const row = document.createElement('tr');
-            row.innerHTML = `<td>${index + 1}</td><td>${team}</td><td>${points}</td>`;
-            categoryTable.querySelector('tbody').appendChild(row);
-        });
-        const categorySection = document.createElement('section');
-        categorySection.innerHTML = `<h3>${category} Leaderboard</h3>`;
-        categorySection.appendChild(categoryTable);
-        resultsContainer.appendChild(categorySection);
+    Object.keys(scores.categories).forEach(catName => {
+        const catSection = document.createElement('section');
+        catSection.innerHTML = `<h3>${catName} Leaderboard</h3>`;
+        const catScores = scores.categories[catName].filter(([, score]) => score > 0);
+        if (catScores.length > 0) {
+            const rows = catScores.map(([team, score], i) => [i + 1, team, score]);
+            catSection.appendChild(createTable(['Rank', 'Team', 'Score'], rows));
+        } else {
+            catSection.innerHTML += `<p class="no-results-msg">No published results for ${catName} yet.</p>`;
+        }
+        resultsContainer.appendChild(catSection);
     });
 };
 
-// --- Poster Generation ---
-const generatePoster = (compId) => {
-    const competition = (data.competitions || []).find(c => c.id === compId);
-    if (!competition) {
-        alert("Could not find competition data to generate poster.");
-        return;
-    }
-    const logo = new Image();
-    logo.crossOrigin = "Anonymous";
-    logo.src = 'mehfil-logo.png'; // Update to appropriate logo file if needed
-    logo.onload = () => {
-        const sortedResults = (competition.results || []).sort((a, b) => parseInt(a.place) - parseInt(b.place));
-        sortedResults.forEach(winner => {
-            if (winner.name) {
-                const canvas = document.createElement('canvas');
-                canvas.width = 800;
-                canvas.height = 1200;
-                const ctx = canvas.getContext('2d');
-
-                // Background gradient (teal like the model)
-                const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-                gradient.addColorStop(0, '#26A69A');
-                gradient.addColorStop(1, '#00695C');
-                ctx.fillStyle = gradient;
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-                // Draw logo
-                const logoWidth = 300;
-                const logoHeight = (logo.height / logo.width) * logoWidth;
-                ctx.drawImage(logo, (canvas.width - logoWidth) / 2, 50, logoWidth, logoHeight);
-
-                // "CONGRATULATIONS" text
-                ctx.fillStyle = 'white';
-                ctx.textAlign = 'center';
-                ctx.font = 'bold 80px sans-serif';
-                ctx.fillText('CONGRATULATIONS', canvas.width / 2, 350);
-
-                // Winner name
-                ctx.font = 'bold 50px sans-serif';
-                ctx.fillStyle = '#FFCA28'; // Yellow like in the model
-                ctx.fillText(winner.name, canvas.width / 2, 450);
-
-                // Prize and category
-                ctx.font = 'bold 40px sans-serif';
-                ctx.fillStyle = 'white';
-                ctx.fillText(`${winner.place} Prize`, canvas.width / 2, 520);
-                ctx.font = '36px sans-serif';
-                ctx.fillText(competition.name, canvas.width / 2, 580);
-
-                // Additional details (class and team)
-                ctx.font = 'italic 28px sans-serif';
-                ctx.fillText(`${winner.class || 'No Class'} - ${winner.team || 'No Team'}`, canvas.width / 2, 640);
-
-                // Footer
-                ctx.font = '24px sans-serif';
-                ctx.fillStyle = 'white';
-                ctx.fillText('Hayathul Islam Higher Secondary Madrasa, Muringampurayi', canvas.width / 2, canvas.height - 50);
-
-                // Social media handle (adapted from model)
-                ctx.font = '18px sans-serif';
-                ctx.fillText('@mehfil_media', 100, 30); // Update handle as needed
-
-                // Download the poster for this individual
-                const link = document.createElement('a');
-                link.download = `Winner_${winner.name}_${competition.name}.png`;
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-            }
-        });
-    };
-    logo.onerror = () => {
-        alert("Error: Could not load logo. Make sure the logo file is in the project folder.");
-    };
-};
+// --- Admin Actions ---
 
 const handlePublishToggle = (id) => {
     const comp = (data.competitions || []).find(c => c.id == id);
@@ -260,8 +190,6 @@ const handlePublishToggle = (id) => {
         saveData();
         const action = comp.isPublished ? "published" : "hidden";
         alert(`Competition "${comp.name}" is now ${action}.`);
-        renderCompetitions();
-        renderPublicView();
     }
 };
 
@@ -273,8 +201,6 @@ const deleteCategory = (id) => {
         competitionEntry.classList.add('hidden');
     }
     saveData();
-    renderCategoryTabs();
-    renderPublicView();
     alert("Category deleted.");
 };
 
@@ -285,8 +211,6 @@ const handleEditCompetition = (id) => {
         if (newName && newName.trim()) {
             comp.name = newName.trim();
             saveData();
-            renderCompetitions();
-            renderPublicView();
             alert("Competition updated.");
         }
     }
@@ -296,8 +220,6 @@ const handleDeleteCompetition = (id) => {
     if (confirm("Delete this competition?")) {
         data.competitions = (data.competitions || []).filter(comp => comp.id != id);
         saveData();
-        renderCompetitions();
-        renderPublicView();
         alert("Competition deleted.");
     }
 };
@@ -321,7 +243,6 @@ const handleSaveAllResults = (compId) => {
     });
     comp.results = newResults;
     saveData();
-    renderPublicView();
     alert(`Results for "${comp.name}" saved.`);
 };
 
@@ -389,7 +310,6 @@ const setupEventListeners = () => {
         if (target.classList.contains('edit-comp-btn')) handleEditCompetition(compId);
         if (target.classList.contains('delete-comp-btn')) handleDeleteCompetition(compId);
         if (target.classList.contains('save-all-results-btn')) handleSaveAllResults(compId);
-        if (target.classList.contains('generate-poster-btn')) generatePoster(compId);
     });
 };
 
