@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Individual Results - MEHFILE RABEEH</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
@@ -42,11 +43,52 @@
         <p>&copy; 2025 Hayathul Islam Higher Secondary Madrasa, Muringampurayi</p>
     </footer>
 
+    <div id="choice-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <h3>Create Poster</h3>
+            <p>How would you like to add an image?</p>
+            <div class="modal-buttons">
+                <button id="upload-choice-btn">🖼️ Upload a File</button>
+                <button id="camera-choice-btn">📸 Use Camera</button>
+                <button id="default-icon-choice-btn">👤 Use Default Icon</button>
+            </div>
+            <button class="close-modal-btn" data-modal-id="choice-modal">Cancel</button>
+        </div>
+    </div>
+
+    <div id="cropper-modal" class="modal-overlay hidden">
+        <div class="modal-content wide">
+            <h3>Crop Your Image</h3>
+            <p>Adjust the image to fit perfectly in the circle. The file you selected is <strong id="file-info"></strong>.</p>
+            <div class="cropper-container">
+                <img id="image-to-crop" src="">
+            </div>
+            <div class="modal-buttons">
+                <button id="crop-confirm-btn">Confirm & Create Poster</button>
+            </div>
+            <button class="close-modal-btn" data-modal-id="cropper-modal">Cancel</button>
+        </div>
+    </div>
+
+    <div id="camera-modal" class="modal-overlay hidden">
+        <div class="modal-content wide">
+            <h3>Take a Picture</h3>
+            <div class="camera-container">
+                <video id="camera-stream" autoplay></video>
+            </div>
+            <div class="modal-buttons">
+                <button id="snapshot-btn">Take Picture</button>
+            </div>
+            <button class="close-modal-btn" data-modal-id="camera-modal">Cancel</button>
+        </div>
+    </div>
+
     <canvas id="poster-canvas" class="hidden"></canvas>
     <input type="file" id="image-uploader" class="hidden" accept="image/*">
 
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
     <script>
       const firebaseConfig = {
         apiKey: "AIzaSyABYSm67ouiyZglPGgHROFmLTI8eiieRc8",
