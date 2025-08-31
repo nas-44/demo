@@ -10,6 +10,7 @@
     --close-btn-hover-color: #5a6268;
     --publish-btn-color: #007bff;
     --publish-btn-hover-color: #0069d9;
+    /* NEW: Color for poster button */
     --poster-btn-color: #17a2b8;
     --poster-btn-hover-color: #138496;
 }
@@ -125,18 +126,6 @@ main {
     background-color: #f8f9fa;
     transition: background-color 0.3s, color 0.3s;
     font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-
-.delete-item-btn {
-    background-color: #dc3545 !important;
-    padding: 0.2rem 0.5rem !important;
-    font-size: 0.7rem !important;
-    border-radius: 50% !important;
-    line-height: 1;
-    margin-left: 10px !important;
 }
 
 .category-tab:hover {
@@ -195,6 +184,14 @@ main {
 .unpublish-btn:hover {
     background-color: var(--close-btn-hover-color);
 }
+/* NEW: Poster button style */
+.generate-poster-btn {
+    background-color: var(--poster-btn-color);
+}
+.generate-poster-btn:hover {
+    background-color: var(--poster-btn-hover-color);
+}
+
 
 .result-entry-form {
     display: flex;
@@ -306,15 +303,6 @@ main {
     color: #888;
     font-style: italic;
     padding: 2rem;
-}
-
-.create-poster-btn {
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-    background-color: var(--poster-btn-color);
-}
-.create-poster-btn:hover {
-    background-color: var(--poster-btn-hover-color);
 }
 
 /* Responsive Design */
