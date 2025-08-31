@@ -184,6 +184,13 @@ main {
     background-color: var(--close-btn-hover-color);
 }
 
+/* NEW: Style for the competition list poster button */
+.generate-competition-poster-btn {
+    background-color: var(--poster-btn-color);
+}
+.generate-competition-poster-btn:hover {
+    background-color: var(--poster-btn-hover-color);
+}
 .result-entry-form {
     display: flex;
     flex-direction: column;

@@ -82,6 +82,7 @@ const renderCompetitions = () => {
         compCard.innerHTML = `
             <h4>${comp.name}</h4>
             <div class="edit-delete-buttons">
+                <button class="generate-competition-poster-btn" data-id="${comp.id}">List Poster</button>
                 <button class="${publishBtnClass}" data-id="${comp.id}">${publishBtnText}</button>
                 <button class="edit-comp-btn" data-id="${comp.id}">Edit Name</button>
                 <button class="delete-comp-btn" data-id="${comp.id}">Delete</button>
@@ -95,7 +96,6 @@ const renderCompetitions = () => {
     });
 };
 
-// MODIFIED: This function no longer renders the poster button in the admin panel.
 const renderResultRows = (competition) => {
     let html = '';
     const places = ['1st', '2nd', '3rd'];
@@ -182,6 +182,107 @@ const renderPublicView = () => {
 };
 
 // --- Admin Actions ---
+
+const generateCompetitionPoster = (compId) => {
+    console.log("1. 'generateCompetitionPoster' function called with ID:", compId);
+    const competition = (data.competitions || []).find(c => c.id === compId);
+    const category = (data.categories || []).find(c => c.id === competition.categoryId);
+    
+    if (!competition) {
+        alert("Error: Competition data not found.");
+        console.error("Error: Could not find competition with ID:", compId);
+        return;
+    }
+    console.log("2. Found Competition:", competition.name, "in Category:", category.name);
+
+    const canvas = document.getElementById('poster-canvas');
+    canvas.width = 1080;
+    canvas.height = 1080;
+    const ctx = canvas.getContext('2d');
+
+    const logo = new Image();
+    logo.src = 'new-logo.png';
+
+    const dome = new Image();
+    dome.src = 'dome.png';
+
+    console.log("3. Attempting to load images: 'new-logo.png' and 'dome.png'");
+
+    Promise.all([
+        new Promise((resolve, reject) => { logo.onload = resolve; logo.onerror = reject; }),
+        new Promise((resolve, reject) => { dome.onload = resolve; dome.onerror = reject; })
+    ]).then(() => {
+        console.log("4. Images loaded successfully. Starting to draw poster.");
+        
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.fillStyle = '#F5F5F5';
+        ctx.beginPath();
+        ctx.moveTo(0, 300);
+        ctx.lineTo(200, 400);
+        ctx.lineTo(200, 800);
+        ctx.lineTo(0, 900);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.drawImage(logo, 850, 60, 170, 170 * (logo.height / logo.width));
+        ctx.drawImage(dome, 550, 520, 530, 530 * (dome.height / dome.width));
+        
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#4a4a4a';
+        ctx.font = 'bold 50px Poppins, sans-serif';
+        ctx.fillText((category.name || '').toUpperCase(), canvas.width / 2, 200);
+
+        ctx.font = '35px Poppins, sans-serif';
+        ctx.fillText((competition.name || '').toUpperCase(), canvas.width / 2, 250);
+        
+        ctx.fillStyle = '#d3a6a1';
+        ctx.font = 'bold 70px Poppins, sans-serif';
+        ctx.fillText('WINNERS', canvas.width / 2, 330);
+
+        const sortedResults = (competition.results || [])
+            .filter(r => r.name)
+            .sort((a, b) => parseInt(a.place) - parseInt(b.place));
+
+        let startY = 480;
+        sortedResults.forEach((winner, index) => {
+            ctx.fillStyle = '#FCE9E5';
+            ctx.beginPath();
+            ctx.arc(200, startY - 20, 40, 0, 2 * Math.PI);
+            ctx.fill();
+
+            ctx.fillStyle = '#d3a6a1';
+            ctx.font = 'bold 35px Poppins, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(index + 1, 200, startY - 8);
+
+            ctx.fillStyle = '#4a4a4a';
+            ctx.textAlign = 'left';
+            ctx.font = 'bold 50px Poppins, sans-serif';
+            ctx.fillText(winner.name.toUpperCase(), 300, startY);
+            ctx.font = '30px Poppins, sans-serif';
+            ctx.fillText(winner.team || '', 300, startY + 40);
+
+            startY += 150;
+        });
+
+        ctx.fillStyle = '#4a4a4a';
+        ctx.textAlign = 'center';
+        ctx.font = 'bold 28px Poppins, sans-serif';
+        ctx.fillText('HAYATHUL ISLAM HIGHER SECONDARY MADRASA,', canvas.width / 2, 980);
+        ctx.fillText('Muringampurayi, Mukkam', canvas.width / 2, 1020);
+
+        console.log("5. Drawing complete. Triggering download.");
+        const link = document.createElement('a');
+        link.download = `Winners - ${competition.name}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    }).catch(error => {
+        console.error("ERROR: Could not load images for the poster.", error);
+        alert("Poster could not be created. Please check the following:\n\n1. Make sure 'new-logo.png' and 'dome.png' are in your project folder.\n2. Open the developer console (F12) to see detailed errors.");
+    });
+};
 
 const handlePublishToggle = (id) => {
     const comp = (data.competitions || []).find(c => c.id == id);
@@ -310,6 +411,11 @@ const setupEventListeners = () => {
         if (target.classList.contains('edit-comp-btn')) handleEditCompetition(compId);
         if (target.classList.contains('delete-comp-btn')) handleDeleteCompetition(compId);
         if (target.classList.contains('save-all-results-btn')) handleSaveAllResults(compId);
+        
+        if (target.classList.contains('generate-competition-poster-btn')) {
+            console.log("0. Button click detected in the main event listener.");
+            generateCompetitionPoster(compId);
+        }
     });
 };
 
