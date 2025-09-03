@@ -2,116 +2,141 @@
 const STORAGE_KEY = "artsFestData";
 let allData = {};
 const database = firebase.database();
-let tempPosterData = null; // Holds winner data while modals are open
-let cropper = null; // Holds the Cropper.js instance
-let cameraStream = null; // Holds the camera video stream
+let tempPosterData = null; 
+let cropper = null; 
+let cameraStream = null; 
 
 // --- DOM Elements ---
 const categorySelect = document.getElementById('category-select');
 const competitionSelect = document.getElementById('competition-select');
 const resultsContainer = document.getElementById('individual-results-container');
 const imageUploader = document.getElementById('image-uploader');
-
-// Modals
 const choiceModal = document.getElementById('choice-modal');
 const cropperModal = document.getElementById('cropper-modal');
 const cameraModal = document.getElementById('camera-modal');
 
-// --- Poster Generation Function ---
+/**
+ * NEW: Professional Individual Poster Generator
+ * Creates a visually appealing poster for a single winner with randomized themes.
+ */
 const generateIndividualPoster = (imageSrc, posterData) => {
     const canvas = document.getElementById('poster-canvas');
     canvas.width = 1080;
-    canvas.height = 1350;
+    canvas.height = 1350; // Portrait format for social media
     const ctx = canvas.getContext('2d');
 
     const studentImg = new Image();
     studentImg.crossOrigin = "Anonymous";
-    studentImg.onload = () => {
-        const logo = new Image();
-        logo.crossOrigin = "Anonymous";
-        logo.src = 'new-logo.png';
-        logo.onload = () => {
-            // --- Drawing logic with updated design ---
+    const bgImg = new Image();
+    bgImg.src = 'bg.png';
 
-            // 1. Background (Softer, more balanced gradient)
-            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            gradient.addColorStop(0, '#ADD8E6'); // Light Blue
-            gradient.addColorStop(0.5, '#E0FFFF'); // Light Cyan
-            gradient.addColorStop(1, '#ADD8E6'); // Light Blue
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Array of themes for randomization
+    const themes = [
+        { bg: ['#000000', '#434343'], accent: '#FFD700', prizeText: '#FFFFFF' }, // Black & Gold
+        { bg: ['#141E30', '#243B55'], accent: '#FFFFFF', prizeText: '#F7971E' }, // Deep Blue & Orange
+        { bg: ['#3A1C71', '#D76D77', '#FFAF7B'], accent: '#FFFFFF', prizeText: '#FFFFFF' }, // Purple/Pink Gradient
+        { bg: ['#16222A', '#3A6073'], accent: '#E0E0E0', prizeText: '#6DD5FA' }  // Dark Teal & Light Blue
+    ];
+    const selectedTheme = themes[Math.floor(Math.random() * themes.length)];
 
-            // 2. Decorative elements (subtle patterns/shapes)
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)'; // More subtle white overlay
-            ctx.beginPath();
-            ctx.moveTo(0, canvas.height * 0.7);
-            ctx.bezierCurveTo(canvas.width * 0.2, canvas.height * 0.6, canvas.width * 0.8, canvas.height * 0.8, canvas.width, canvas.height * 0.7);
-            ctx.lineTo(canvas.width, canvas.height);
-            ctx.lineTo(0, canvas.height);
-            ctx.closePath();
-            ctx.fill();
-
-            // 3. Fest Logo (top right)
-            const logoWidth = 150; // Slightly larger logo
-            const logoHeight = (logo.height / logo.width) * logoWidth;
-            ctx.drawImage(logo, canvas.width - logoWidth - 50, 50, logoWidth, logoHeight);
-
-            // 4. "CONGRATULATIONS" Text
-            ctx.fillStyle = '#4682B4'; // Steel Blue for main text
-            ctx.textAlign = 'center';
-            ctx.font = 'bold 120px Poppins, sans-serif';
-            ctx.fillText('CONGRAT', canvas.width / 2, 280);
-            ctx.fillText('ULATIONS', canvas.width / 2, 400);
-
-            // 5. Winner Details
-            ctx.fillStyle = '#191970'; // Midnight Blue for name
-            ctx.font = 'bold 75px Poppins, sans-serif'; // Slightly larger name
-            ctx.fillText(posterData.name, canvas.width / 2, 530);
-
-            const prizeText = { '1st': 'First Prize', '2nd': 'Second Prize', '3rd': 'Third Prize' }[posterData.place] || posterData.place;
-            ctx.fillStyle = '#FFD700'; // Gold color for prize
-            ctx.font = '60px Poppins, sans-serif'; // Larger prize text
-            ctx.fillText(prizeText, canvas.width / 2, 610); // Adjusted position
-
-            ctx.fillStyle = '#6A5ACD'; // Slate Blue for competition name
-            ctx.font = 'italic 50px Poppins, sans-serif'; // Larger competition name
-            ctx.fillText(posterData.competitionName, canvas.width / 2, 680); // Adjusted position
-
-            // 6. Student Image in a Circle
-            const imgY = 950; // Lowered image position slightly
-            const radius = 220; // Slightly larger circle
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(canvas.width / 2, imgY, radius, 0, Math.PI * 2);
-            ctx.strokeStyle = '#FFFFFF'; // White border for the circle
-            ctx.lineWidth = 15; // Thicker border
-            ctx.stroke();
-            ctx.clip();
-            ctx.drawImage(studentImg, canvas.width / 2 - radius, imgY - radius, radius * 2, radius * 2);
-            ctx.restore();
-
-            // 7. Madrasa Name (Footer) - BOLD and Larger
-            ctx.fillStyle = '#191970'; // Midnight Blue for footer text
-            ctx.textAlign = 'center';
-            ctx.font = 'bold 40px Poppins, sans-serif'; // BOLD and larger font size
-            ctx.fillText('HAYATHUL ISLAM HIGHER SECONDARY MADRASA,', canvas.width / 2, canvas.height - 80);
-            ctx.fillText('Muringampurayi, Mukkam', canvas.width / 2, canvas.height - 30); // Second line for madrasa name
-
-            // --- End Drawing ---
-
-            // 8. Trigger Download
-            const link = document.createElement('a');
-            link.download = `Congratulations - ${posterData.name}.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-        };
-        logo.onerror = () => alert("Error: Could not load the logo 'new-logo.png'. Make sure it's in the project folder.");
-    };
+    // Set the image source before starting to load
     studentImg.src = imageSrc;
+
+    // Wait for both images to load before drawing anything
+    Promise.all([
+        new Promise((resolve, reject) => { studentImg.onload = resolve; studentImg.onerror = reject; }),
+        new Promise((resolve, reject) => { bgImg.onload = resolve; bgImg.onerror = reject; })
+    ]).then(() => {
+        // 1. Background Gradient
+        const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        selectedTheme.bg.forEach((color, index) => {
+            gradient.addColorStop(index / (selectedTheme.bg.length - 1 || 1), color);
+        });
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // 2. Subtle Background Image
+        ctx.globalAlpha = 0.1;
+        ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
+        ctx.globalAlpha = 1.0;
+
+        // 3. Header Text
+        ctx.textAlign = 'center';
+        ctx.fillStyle = 'white';
+        ctx.font = "90px 'Ramadhan Amazing', sans-serif";
+        ctx.fillText("Mehfile RabeeE", canvas.width / 2, 120);
+        ctx.font = "60px 'Ramadhan Amazing', sans-serif";
+        ctx.fillText("meelad fest", canvas.width / 2, 190);
+
+        // 4. "CONGRATULATIONS" Title
+        ctx.font = "bold 60px 'Poppins', sans-serif";
+        ctx.fillStyle = selectedTheme.accent;
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+        ctx.shadowBlur = 10;
+        ctx.fillText('CONGRATULATIONS', canvas.width / 2, 300);
+        ctx.shadowBlur = 0;
+
+        // 5. Student Image in decorated circle
+        const imgCenterY = 540;
+        const radius = 180;
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(canvas.width / 2, imgCenterY, radius + 10, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.1)'; // Faint outer glow
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(canvas.width / 2, imgCenterY, radius, 0, Math.PI * 2);
+        ctx.strokeStyle = selectedTheme.accent;
+        ctx.lineWidth = 8;
+        ctx.stroke();
+        ctx.clip();
+        ctx.drawImage(studentImg, canvas.width / 2 - radius, imgCenterY - radius, radius * 2, radius * 2);
+        ctx.restore();
+
+        // 6. Winner's Name (with auto-resize for long names)
+        ctx.fillStyle = 'white';
+        let winnerFontSize = 100;
+        ctx.font = `bold ${winnerFontSize}px 'Poppins', sans-serif`;
+        while (ctx.measureText(posterData.name.toUpperCase()).width > canvas.width - 120) {
+            winnerFontSize -= 5;
+            ctx.font = `bold ${winnerFontSize}px 'Poppins', sans-serif`;
+        }
+        ctx.fillText(posterData.name.toUpperCase(), canvas.width / 2, 850);
+
+        // 7. Prize Text
+        const prizeText = { '1st': 'FIRST PRIZE', '2nd': 'SECOND PRIZE', '3rd': 'THIRD PRIZE' }[posterData.place] || posterData.place.toUpperCase();
+        ctx.fillStyle = selectedTheme.prizeText;
+        ctx.font = "bold 55px 'Poppins', sans-serif";
+        ctx.fillText(prizeText, canvas.width / 2, 950);
+
+        // 8. Competition & Team Name
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.font = "34px 'Poppins', sans-serif";
+        ctx.fillText(posterData.competitionName.toUpperCase(), canvas.width / 2, 1020);
+        if (posterData.team) {
+            ctx.fillText(`TEAM: ${posterData.team.toUpperCase()}`, canvas.width / 2, 1070);
+        }
+
+        // 9. Footer
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = "bold 30px 'Poppins', sans-serif";
+        ctx.fillText('HAYATHUL ISLAM HIGHER SECONDARY MADRASA', canvas.width / 2, canvas.height - 90);
+        ctx.font = "24px 'Poppins', sans-serif";
+        ctx.fillText('Muringampurayi, Mukkam', canvas.width / 2, canvas.height - 50);
+
+        // --- Trigger Download ---
+        const link = document.createElement('a');
+        link.download = `Congratulations-${posterData.name}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+
+    }).catch(err => {
+        console.error("Error loading images for poster:", err);
+        alert("Could not load images needed for the poster. Check console for errors.");
+    });
 };
 
-
-// --- UI and Data Functions ---
+// --- UI and Data Functions (No changes below this line) ---
 const renderSelectedCompetition = () => {
     const selectedCompId = competitionSelect.value;
     resultsContainer.innerHTML = '';
@@ -125,9 +150,13 @@ const renderSelectedCompetition = () => {
     const category = (allData.categories || []).find(cat => cat.id === competition.categoryId);
     const section = document.createElement('section');
     section.innerHTML = `<h3>${competition.name} - ${category ? category.name : 'Unknown'}</h3>`;
-    const results = (competition.results || []).sort((a, b) => parseInt(a.place) - parseInt(b.place));
+    
+    const placeOrder = { '1st': 1, '2nd': 2, '3rd': 3 };
+    const results = (competition.results || [])
+        .filter(r => r.name)
+        .sort((a, b) => (placeOrder[a.place] || 99) - (placeOrder[b.place] || 99));
 
-    if (results.length > 0 && results.some(r => r.name)) {
+    if (results.length > 0) {
         const table = document.createElement('table');
         table.className = 'result-table';
         table.innerHTML = `<thead><tr><th>Place</th><th>Student</th><th>Class</th><th>Team</th><th>Action</th></tr></thead>`;
@@ -176,7 +205,7 @@ const populateCompetitionFilter = () => {
 
 const populateCategoryFilter = () => {
     const categories = (allData.categories || []).sort((a, b) => a.name.localeCompare(b.name));
-    const publishedCompetitions = allData.competitions.filter(c => c.isPublished);
+    const publishedCompetitions = (allData.competitions || []).filter(c => c.isPublished);
     const categoriesWithPublishedResults = categories.filter(cat => 
         publishedCompetitions.some(comp => comp.categoryId === cat.id)
     );
@@ -188,7 +217,6 @@ const populateCategoryFilter = () => {
     });
 };
 
-// --- Modal and Feature Functions ---
 const closeModal = (modal) => {
     if (cameraStream) {
         cameraStream.getTracks().forEach(track => track.stop());
@@ -202,7 +230,6 @@ const openCropperModal = (imageURL, file) => {
     const image = document.getElementById('image-to-crop');
     image.src = imageURL;
     
-    // Display file info
     const fileInfo = document.getElementById('file-info');
     if(file) {
         fileInfo.textContent = `${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
@@ -239,8 +266,6 @@ const openCameraModal = () => {
         });
 };
 
-
-// --- Initialization and Event Listeners ---
 const init = () => {
     database.ref(STORAGE_KEY).on('value', (snapshot) => {
         allData = { categories: [], teams: [], competitions: [], ...snapshot.val() };
@@ -253,7 +278,6 @@ const init = () => {
     });
     competitionSelect.addEventListener('change', renderSelectedCompetition);
 
-    // Main event listener for poster creation workflow
     resultsContainer.addEventListener('click', (e) => {
         if (e.target.classList.contains('generate-public-poster-btn')) {
             const button = e.target;
@@ -267,7 +291,6 @@ const init = () => {
         }
     });
 
-    // Event listener for the image uploader (triggered programmatically)
     imageUploader.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -277,10 +300,9 @@ const init = () => {
             };
             reader.readAsDataURL(file);
         }
-        e.target.value = null; // Reset for next use
+        e.target.value = null; 
     });
 
-    // Event listeners for the new choice modal buttons
     document.getElementById('upload-choice-btn').addEventListener('click', () => {
         closeModal(choiceModal);
         imageUploader.click();
@@ -291,18 +313,21 @@ const init = () => {
         openCameraModal();
     });
     
-    document.getElementById('default-icon-choice-btn').addEventListener('click', () => {
+    document.getElementById('male-icon-choice-btn').addEventListener('click', () => {
         closeModal(choiceModal);
-        // A simple SVG for a person icon
-        const defaultIconSVG = `data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2RkZCI+PHBhdGggZD0iTTEyIDJDNi40OCAyIDIgNi40OCAyIDEyczQuNDggMTAgMTAgMTAgMTAtNC40OCAxMC0xMFMxNy41MiAyIDEyIDJ6bTAgM2MxLjY2IDAgMyAxLjM0IDMgM3MtMS4zNCAzLTMgMy0zLTEuMzQtMy0zIDEuMzQtMyAzLTN6bTAgMTRjLTIuMzMgMC00LjMyLTEuMDctNS42OC0yLjcxbDEuNDEtMS40MWMxLjEgMS4yMiAyLjU5IDIuMTIgNC4yNyAyLjEyIDIuMDcgMCAzLjk3LS45OSA1LjE5LTIuNTNsMS40MSAxLjQxQzE2LjAxIDIwLjI4IDE0LjAzIDIxIDEyIDIxeiIvPjwvc3ZnPg==`;
-        generateIndividualPoster(defaultIconSVG, tempPosterData);
+        generateIndividualPoster('boy.jpg', tempPosterData);
+        tempPosterData = null;
+    });
+    
+    document.getElementById('female-icon-choice-btn').addEventListener('click', () => {
+        closeModal(choiceModal);
+        generateIndividualPoster('girl.jpg', tempPosterData);
         tempPosterData = null;
     });
 
-    // Event listeners for cropper and camera modals
     document.getElementById('crop-confirm-btn').addEventListener('click', () => {
         if (cropper) {
-            const croppedCanvas = cropper.getCroppedCanvas({ width: 440, height: 440 }); // Adjusted size for potential larger circle
+            const croppedCanvas = cropper.getCroppedCanvas({ width: 500, height: 500 });
             generateIndividualPoster(croppedCanvas.toDataURL(), tempPosterData);
             closeModal(cropperModal);
             tempPosterData = null;
@@ -319,7 +344,6 @@ const init = () => {
         openCropperModal(canvas.toDataURL('image/png'), null);
     });
 
-    // Generic close button listener for all modals
     document.querySelectorAll('.close-modal-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const modal = document.getElementById(btn.dataset.modalId);

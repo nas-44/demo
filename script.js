@@ -183,106 +183,116 @@ const renderPublicView = () => {
 
 // --- Admin Actions ---
 
+/**
+ * NEW: Professional Competition Poster Generator
+ * Creates a visually appealing poster for a competition's winners with randomized themes.
+ */
 const generateCompetitionPoster = (compId) => {
-    console.log("1. 'generateCompetitionPoster' function called with ID:", compId);
     const competition = (data.competitions || []).find(c => c.id === compId);
     const category = (data.categories || []).find(c => c.id === competition.categoryId);
-    
     if (!competition) {
-        alert("Error: Competition data not found.");
-        console.error("Error: Could not find competition with ID:", compId);
+        alert("Competition data not found.");
         return;
     }
-    console.log("2. Found Competition:", competition.name, "in Category:", category.name);
 
     const canvas = document.getElementById('poster-canvas');
     canvas.width = 1080;
     canvas.height = 1080;
     const ctx = canvas.getContext('2d');
 
-    const logo = new Image();
-    logo.src = 'new-logo.png';
+    const domeImg = new Image();
+    domeImg.src = 'dome.png';
 
-    const dome = new Image();
-    dome.src = 'dome.png';
+    const themes = [
+        { bg: ['#232526', '#414345'], accent: '#FFD700' },
+        { bg: ['#0f2027', '#203a43', '#2c5364'], accent: '#FFFFFF' },
+        { bg: ['#434343', '#000000'], accent: '#FDC830' }
+    ];
+    const selectedTheme = themes[Math.floor(Math.random() * themes.length)];
 
-    console.log("3. Attempting to load images: 'new-logo.png' and 'dome.png'");
-
-    Promise.all([
-        new Promise((resolve, reject) => { logo.onload = resolve; logo.onerror = reject; }),
-        new Promise((resolve, reject) => { dome.onload = resolve; dome.onerror = reject; })
-    ]).then(() => {
-        console.log("4. Images loaded successfully. Starting to draw poster.");
-        
-        ctx.fillStyle = '#FFFFFF';
+    domeImg.onload = () => {
+        const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        selectedTheme.bg.forEach((color, index) => {
+            gradient.addColorStop(index / (selectedTheme.bg.length - 1 || 1), color);
+        });
+        ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
-        ctx.fillStyle = '#F5F5F5';
-        ctx.beginPath();
-        ctx.moveTo(0, 300);
-        ctx.lineTo(200, 400);
-        ctx.lineTo(200, 800);
-        ctx.lineTo(0, 900);
-        ctx.closePath();
-        ctx.fill();
 
-        ctx.drawImage(logo, 850, 60, 170, 170 * (logo.height / logo.width));
-        ctx.drawImage(dome, 550, 520, 530, 530 * (dome.height / dome.width));
-        
+        ctx.globalAlpha = 0.15;
+        const domeWidth = 800;
+        const domeHeight = domeWidth * (domeImg.height / domeImg.width);
+        ctx.drawImage(domeImg, (canvas.width - domeWidth) / 2, canvas.height - domeHeight + 150, domeWidth, domeHeight);
+        ctx.globalAlpha = 1.0;
+
         ctx.textAlign = 'center';
-        ctx.fillStyle = '#4a4a4a';
-        ctx.font = 'bold 50px Poppins, sans-serif';
-        ctx.fillText((category.name || '').toUpperCase(), canvas.width / 2, 200);
+        ctx.fillStyle = 'white';
+        ctx.font = "80px 'Ramadhan Amazing', sans-serif";
+        ctx.fillText("Mehfile RabeeE", canvas.width / 2, 120);
+        ctx.font = "40px 'Ramadhan Amazing', sans-serif";
+        ctx.fillText("meelad fest", canvas.width / 2, 170);
 
-        ctx.font = '35px Poppins, sans-serif';
-        ctx.fillText((competition.name || '').toUpperCase(), canvas.width / 2, 250);
-        
-        ctx.fillStyle = '#d3a6a1';
-        ctx.font = 'bold 70px Poppins, sans-serif';
-        ctx.fillText('WINNERS', canvas.width / 2, 330);
+        ctx.font = "bold 28px 'Poppins', sans-serif";
+        ctx.fillStyle = '#CCCCCC';
+        ctx.fillText(`${category.name.toUpperCase()} - ${competition.name.toUpperCase()}`, canvas.width / 2, 240);
 
+        ctx.font = "bold 130px 'Poppins', sans-serif";
+        ctx.fillStyle = selectedTheme.accent;
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetX = 5;
+        ctx.shadowOffsetY = 5;
+        ctx.fillText('WINNERS', canvas.width / 2, 380);
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+
+        const placeOrder = { '1st': 1, '2nd': 2, '3rd': 3 };
         const sortedResults = (competition.results || [])
             .filter(r => r.name)
-            .sort((a, b) => parseInt(a.place) - parseInt(b.place));
+            .sort((a, b) => (placeOrder[a.place] || 99) - (placeOrder[b.place] || 99));
 
-        let startY = 480;
-        sortedResults.forEach((winner, index) => {
-            ctx.fillStyle = '#FCE9E5';
+        let startY = 520;
+        const itemHeight = 150;
+        
+        sortedResults.forEach((winner) => {
+            ctx.fillStyle = selectedTheme.accent;
             ctx.beginPath();
-            ctx.arc(200, startY - 20, 40, 0, 2 * Math.PI);
+            ctx.arc(220, startY - 20, 45, 0, 2 * Math.PI);
             ctx.fill();
 
-            ctx.fillStyle = '#d3a6a1';
-            ctx.font = 'bold 35px Poppins, sans-serif';
+            const rankNumber = winner.place.charAt(0);
+            ctx.fillStyle = selectedTheme.bg[0];
+            ctx.font = "bold 50px 'Poppins', sans-serif";
             ctx.textAlign = 'center';
-            ctx.fillText(index + 1, 200, startY - 8);
+            ctx.fillText(rankNumber, 220, startY - 5);
 
-            ctx.fillStyle = '#4a4a4a';
+            ctx.fillStyle = 'white';
             ctx.textAlign = 'left';
-            ctx.font = 'bold 50px Poppins, sans-serif';
+            ctx.font = "60px 'Poppins', sans-serif";
             ctx.fillText(winner.name.toUpperCase(), 300, startY);
-            ctx.font = '30px Poppins, sans-serif';
-            ctx.fillText(winner.team || '', 300, startY + 40);
 
-            startY += 150;
+            ctx.font = "30px 'Poppins', sans-serif";
+            ctx.fillStyle = '#DDDDDD';
+            ctx.fillText((winner.team || '').toUpperCase(), 300, startY + 40);
+
+            startY += itemHeight;
         });
 
-        ctx.fillStyle = '#4a4a4a';
         ctx.textAlign = 'center';
-        ctx.font = 'bold 28px Poppins, sans-serif';
-        ctx.fillText('HAYATHUL ISLAM HIGHER SECONDARY MADRASA,', canvas.width / 2, 980);
-        ctx.fillText('Muringampurayi, Mukkam', canvas.width / 2, 1020);
+        ctx.fillStyle = 'white';
+        ctx.font = "bold 24px 'Poppins', sans-serif";
+        ctx.fillText('HAYATHUL ISLAM HIGHER SECONDARY MADRASA', canvas.width / 2, canvas.height - 80);
+        ctx.font = "20px 'Poppins', sans-serif";
+        ctx.fillText('Muringampurayi, Mukkam', canvas.width / 2, canvas.height - 50);
 
-        console.log("5. Drawing complete. Triggering download.");
         const link = document.createElement('a');
         link.download = `Winners - ${competition.name}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
-    }).catch(error => {
-        console.error("ERROR: Could not load images for the poster.", error);
-        alert("Poster could not be created. Please check the following:\n\n1. Make sure 'new-logo.png' and 'dome.png' are in your project folder.\n2. Open the developer console (F12) to see detailed errors.");
-    });
+    };
+    domeImg.onerror = () => alert("Could not load dome.png to generate poster.");
 };
+
 
 const handlePublishToggle = (id) => {
     const comp = (data.competitions || []).find(c => c.id == id);
@@ -413,7 +423,6 @@ const setupEventListeners = () => {
         if (target.classList.contains('save-all-results-btn')) handleSaveAllResults(compId);
         
         if (target.classList.contains('generate-competition-poster-btn')) {
-            console.log("0. Button click detected in the main event listener.");
             generateCompetitionPoster(compId);
         }
     });
