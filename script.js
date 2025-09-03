@@ -496,51 +496,82 @@ const generateOverallScorePoster = () => {
 };
 
 /**
- * NEW: Downloads all entries for the currently selected category as an Excel file.
+ * NEW: Downloads all entries for all categories into a styled Excel file.
  */
-const downloadCategoryEntries = () => {
-    if (!currentCategory) {
-        alert("Please select a category first.");
+const downloadFullReport = () => {
+    const categories = data.categories || [];
+    if (categories.length === 0) {
+        alert("No categories found to generate a report.");
         return;
     }
 
-    const categoryCompetitions = (data.competitions || []).filter(comp => comp.categoryId === currentCategory.id);
+    const wb = XLSX.utils.book_new();
 
-    if (categoryCompetitions.length === 0) {
-        alert(`No competitions found for the category: ${currentCategory.name}`);
-        return;
-    }
+    // --- Styling for Excel ---
+    const headerStyle = {
+        font: { bold: true, color: { rgb: "FFFFFF" } },
+        fill: { fgColor: { rgb: "3b5998" } },
+        alignment: { horizontal: "center", vertical: "center" }
+    };
 
-    // Prepare data for Excel
-    const excelData = [];
-    excelData.push(['Competition', 'Place', 'Student Name', 'Class', 'Team']); // Header row
+    // --- Create a sheet for each category ---
+    categories.forEach(category => {
+        const categoryCompetitions = (data.competitions || []).filter(comp => comp.categoryId === category.id);
+        const sheetData = [];
+        
+        // Add a styled title for the category
+        sheetData.push([{v: `${category.name} Category Results`, s: { font: { bold: true, sz: 16 } } }]);
+        sheetData.push([]); // Spacer row
 
-    categoryCompetitions.forEach(comp => {
-        if (comp.results && comp.results.length > 0) {
-            comp.results.forEach(res => {
-                excelData.push([
-                    comp.name || '',
-                    res.place || '',
-                    res.name || '',
-                    res.class || '',
-                    res.team || ''
+        if (categoryCompetitions.length > 0) {
+            categoryCompetitions.forEach(comp => {
+                sheetData.push([{v: comp.name, s: { font: { bold: true, sz: 14, color: { rgb: "3b5998" } } } }]);
+                sheetData.push([
+                    {v: 'Place', s: headerStyle},
+                    {v: 'Student Name', s: headerStyle},
+                    {v: 'Class', s: headerStyle},
+                    {v: 'Team', s: headerStyle}
                 ]);
+                
+                if (comp.results && comp.results.length > 0) {
+                    comp.results.forEach(res => {
+                        sheetData.push([res.place || '', res.name || '', res.class || '', res.team || '']);
+                    });
+                } else {
+                    sheetData.push(['(No results entered)', '', '', '']);
+                }
+                sheetData.push([]); // Spacer row after each competition
             });
         } else {
-            excelData.push([comp.name, '(No results entered)', '', '', '']);
+            sheetData.push(['No competitions in this category.']);
         }
+
+        const ws = XLSX.utils.aoa_to_sheet(sheetData);
+        // Set column widths
+        ws['!cols'] = [{wch:20}, {wch:30}, {wch:15}, {wch:20}];
+        XLSX.utils.book_append_sheet(wb, ws, category.name.substring(0, 31)); // Sheet names have a 31-char limit
     });
 
-    // Create a new workbook and a worksheet
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.aoa_to_sheet(excelData);
+    // --- Create a sheet for Overall Scores ---
+    const scores = calculateTeamScores();
+    const overallScoresData = [
+        [{v: 'Overall Team Leaderboard', s: { font: { bold: true, sz: 16 } }}],
+        [],
+        [{v: 'Rank', s: headerStyle}, {v: 'Team', s: headerStyle}, {v: 'Total Score', s: headerStyle}]
+    ];
 
-    // Append the worksheet to the workbook
-    XLSX.utils.book_append_sheet(wb, ws, 'Entries');
+    scores.overall.forEach(([team, score], index) => {
+        overallScoresData.push([index + 1, team, score]);
+    });
 
-    // Generate and download the Excel file
-    XLSX.writeFile(wb, `${currentCategory.name}_Entries.xlsx`);
+    const ws_scores = XLSX.utils.aoa_to_sheet(overallScoresData);
+    ws_scores['!cols'] = [{wch:10}, {wch:30}, {wch:15}];
+    XLSX.utils.book_append_sheet(wb, ws_scores, 'Overall Team Scores');
+
+    // --- Generate and download the Excel file ---
+    XLSX.writeFile(wb, `Mehfile_Rabeeh_Full_Report.xlsx`);
 };
+
 
 const handlePublishToggle = (id) => {
     const comp = (data.competitions || []).find(c => c.id == id);
@@ -631,7 +662,7 @@ const setupEventListeners = () => {
     // NEW event listener for the team poster button
     document.getElementById('generate-overall-poster-btn').addEventListener('click', generateOverallScorePoster);
     // NEW event listener for the download button
-    document.getElementById('download-entries-btn').addEventListener('click', downloadCategoryEntries);
+    document.getElementById('download-report-btn').addEventListener('click', downloadFullReport);
 
 
     submitCategoryBtn.addEventListener('click', () => {
