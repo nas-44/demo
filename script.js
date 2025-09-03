@@ -184,8 +184,8 @@ const renderPublicView = () => {
 // --- Admin Actions ---
 
 /**
- * NEW: Professional Competition Poster Generator
- * Creates a visually appealing poster for a competition's winners with randomized themes.
+ * NEW: Professional Competition Poster Generator with Enhanced Designs
+ * Creates a visually appealing poster for a competition's winners with randomized, diverse themes.
  */
 const generateCompetitionPoster = (compId) => {
     const competition = (data.competitions || []).find(c => c.id === compId);
@@ -200,17 +200,98 @@ const generateCompetitionPoster = (compId) => {
     canvas.height = 1080;
     const ctx = canvas.getContext('2d');
 
+    // Load ALL potential background images
     const domeImg = new Image();
-    domeImg.src = 'dome.png';
+    domeImg.src = 'dome.png'; 
+    const bgPatternImg = new Image();
+    bgPatternImg.src = 'bg.png';
+    const mosqueBg1Img = new Image();
+    mosqueBg1Img.src = 'mosque_bg_1.jpg'; // Your first new image
+    const mosqueBg2Img = new Image();
+    mosqueBg2Img.src = 'mosque_bg_2.jpg'; // Your second new image
 
+    // Enhanced Themes Array
     const themes = [
-        { bg: ['#232526', '#414345'], accent: '#FFD700' },
-        { bg: ['#0f2027', '#203a43', '#2c5364'], accent: '#FFFFFF' },
-        { bg: ['#434343', '#000000'], accent: '#FDC830' }
+        // Theme 1: Dark Blue/Gold - Original style (with dome.png)
+        { 
+            name: "Original Dome Dark",
+            bg: ['#232526', '#414345'], accent: '#FFD700', 
+            primaryBgImage: domeImg, primaryBgAlpha: 0.15, primaryBgOffset: 150, 
+            headerY: 120, festY: 170, categoryY: 240, winnersY: 380, listStartY: 520, 
+            hasPatternOverlay: false,
+            rankCircleColor: null // Default to accent
+        },
+        // Theme 2: Radiant Gradient with Subtle Texture (with bg.png)
+        { 
+            name: "Radiant Texture",
+            bg: ['#121212', '#333333', '#555555'], accent: '#00F0FF', 
+            primaryBgImage: bgPatternImg, primaryBgAlpha: 0.1, primaryBgOffset: 0, 
+            headerY: 120, festY: 170, categoryY: 240, winnersY: 380, listStartY: 520, 
+            hasPatternOverlay: false, // bgPatternImg is the primary here
+            rankCircleColor: 'rgba(0, 240, 255, 0.2)' 
+        },
+        // Theme 3: Deep Purple & Pink with Abstract Shape (no specific image)
+        { 
+            name: "Abstract Purple",
+            bg: ['#3A1C71', '#D76D77', '#FFAF7B'], accent: '#FFEFB3', 
+            primaryBgImage: null, primaryBgAlpha: 0, primaryBgOffset: 0, 
+            abstractShape: true, 
+            headerY: 100, festY: 150, categoryY: 210, winnersY: 330, listStartY: 480, 
+            hasPatternOverlay: false,
+            rankCircleColor: null
+        },
+        // Theme 4: Modern Dark with Sharp Lines (subtle dome.png)
+        { 
+            name: "Modern Lines",
+            bg: ['#0A0A0A', '#1A1A1A'], accent: '#A0FF90', 
+            primaryBgImage: domeImg, primaryBgAlpha: 0.05, primaryBgOffset: 200, 
+            headerY: 110, festY: 160, categoryY: 230, winnersY: 360, listStartY: 500, 
+            hasPatternOverlay: false,
+            decorativeLines: true,
+            rankCircleColor: null
+        },
+        // NEW Theme 5: Using mosque_bg_1.jpg as a subtle background
+        {
+            name: "Mosque BG 1 Subtle",
+            bg: ['#0C1420', '#1A293A'], accent: '#FFEB00',
+            primaryBgImage: mosqueBg1Img, primaryBgAlpha: 0.1, primaryBgOffset: 0,
+            primaryBgMode: 'cover', // Scale to cover the canvas
+            headerY: 120, festY: 170, categoryY: 240, winnersY: 380, listStartY: 520,
+            hasPatternOverlay: false,
+            rankCircleColor: 'rgba(255, 235, 0, 0.2)'
+        },
+        // NEW Theme 6: Using mosque_bg_2.jpg with a darker overlay
+        {
+            name: "Mosque BG 2 Overlay",
+            bg: ['#000000', '#1C0000'], accent: '#EEA236', // Deep red/black with orange accent
+            primaryBgImage: mosqueBg2Img, primaryBgAlpha: 0.2, primaryBgOffset: 0,
+            primaryBgMode: 'cover',
+            headerY: 120, festY: 170, categoryY: 240, winnersY: 380, listStartY: 520,
+            hasPatternOverlay: true, patternAlpha: 0.05, // Can combine with bg.png if desired
+            rankCircleColor: 'rgba(238, 162, 54, 0.3)'
+        },
+        // NEW Theme 7: Mosque BG 1 prominent, with color shift
+        {
+            name: "Mosque BG 1 Prominent",
+            bg: ['#000D1A', '#000000'], accent: '#FFFFFF', // Very dark blue/black
+            primaryBgImage: mosqueBg1Img, primaryBgAlpha: 0.35, primaryBgOffset: 0,
+            primaryBgMode: 'cover',
+            primaryBgFilter: 'grayscale(60%) brightness(80%)', // Apply filter for effect
+            headerY: 120, festY: 170, categoryY: 240, winnersY: 380, listStartY: 520,
+            hasPatternOverlay: false,
+            rankCircleColor: 'rgba(255, 255, 255, 0.2)'
+        }
     ];
     const selectedTheme = themes[Math.floor(Math.random() * themes.length)];
 
-    domeImg.onload = () => {
+    // Load images and then draw
+    Promise.all([
+        new Promise(resolve => { domeImg.onload = resolve; domeImg.onerror = resolve; }), 
+        new Promise(resolve => { bgPatternImg.onload = resolve; bgPatternImg.onerror = resolve; }),
+        new Promise(resolve => { mosqueBg1Img.onload = resolve; mosqueBg1Img.onerror = resolve; }),
+        new Promise(resolve => { mosqueBg2Img.onload = resolve; mosqueBg2Img.onerror = resolve; })
+    ]).then(() => {
+        // 1. Background Gradient
         const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
         selectedTheme.bg.forEach((color, index) => {
             gradient.addColorStop(index / (selectedTheme.bg.length - 1 || 1), color);
@@ -218,50 +299,131 @@ const generateCompetitionPoster = (compId) => {
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-        ctx.globalAlpha = 0.15;
-        const domeWidth = 800;
-        const domeHeight = domeWidth * (domeImg.height / domeImg.width);
-        ctx.drawImage(domeImg, (canvas.width - domeWidth) / 2, canvas.height - domeHeight + 150, domeWidth, domeHeight);
-        ctx.globalAlpha = 1.0;
+        // 2. Primary Background Image (Mosque images or dome/pattern as per theme)
+        if (selectedTheme.primaryBgImage && selectedTheme.primaryBgImage.complete && selectedTheme.primaryBgImage.naturalWidth > 0) {
+            ctx.save(); // Save context to apply transformations/filters
+            ctx.globalAlpha = selectedTheme.primaryBgAlpha;
 
+            // Apply filters if specified
+            if (selectedTheme.primaryBgFilter) {
+                ctx.filter = selectedTheme.primaryBgFilter;
+            }
+
+            if (selectedTheme.primaryBgMode === 'cover') {
+                const img = selectedTheme.primaryBgImage;
+                const imgAspectRatio = img.naturalWidth / img.naturalHeight;
+                const canvasAspectRatio = canvas.width / canvas.height;
+
+                let sx, sy, sWidth, sHeight; // Source rectangle
+                let dx, dy, dWidth, dHeight; // Destination rectangle
+
+                if (imgAspectRatio > canvasAspectRatio) { // Image is wider than canvas
+                    sHeight = img.naturalHeight;
+                    sWidth = sHeight * canvasAspectRatio;
+                    sx = (img.naturalWidth - sWidth) / 2;
+                    sy = 0;
+                } else { // Image is taller than canvas
+                    sWidth = img.naturalWidth;
+                    sHeight = sWidth / canvasAspectRatio;
+                    sx = 0;
+                    sy = (img.naturalHeight - sHeight) / 2;
+                }
+
+                dx = 0;
+                dy = selectedTheme.primaryBgOffset || 0; // Use offset for destination Y
+                dWidth = canvas.width;
+                dHeight = canvas.height;
+
+                ctx.drawImage(img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+            } else { // Default behavior (for dome.png specifically)
+                const img = selectedTheme.primaryBgImage;
+                const imgWidth = 800; // Consistent width for dome
+                const imgHeight = imgWidth * (img.naturalHeight / img.naturalWidth);
+                ctx.drawImage(img, (canvas.width - imgWidth) / 2, canvas.height - imgHeight + (selectedTheme.primaryBgOffset || 0), imgWidth, imgHeight);
+            }
+            
+            ctx.restore(); // Restore context to remove filters/transformations
+            ctx.globalAlpha = 1.0; // Reset alpha
+        }
+
+        // 3. Optional Pattern Overlay (using bg.png if not primary)
+        if (selectedTheme.hasPatternOverlay && bgPatternImg.complete && bgPatternImg.naturalWidth > 0 && selectedTheme.primaryBgImage !== bgPatternImg) {
+            ctx.globalAlpha = selectedTheme.patternAlpha;
+            ctx.drawImage(bgPatternImg, 0, 0, canvas.width, canvas.height);
+            ctx.globalAlpha = 1.0;
+        }
+
+        // 4. Optional Abstract Shape
+        if (selectedTheme.abstractShape) {
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height / 2);
+            ctx.quadraticCurveTo(canvas.width / 4, canvas.height / 4, canvas.width / 2, canvas.height / 2);
+            ctx.quadraticCurveTo(canvas.width * 3 / 4, canvas.height * 3 / 4, canvas.width, canvas.height / 2);
+            ctx.lineTo(canvas.width, canvas.height);
+            ctx.lineTo(0, canvas.height);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        // 5. Decorative Lines (if applicable for theme)
+        if (selectedTheme.decorativeLines) {
+            ctx.strokeStyle = selectedTheme.accent;
+            ctx.lineWidth = 3;
+            ctx.globalAlpha = 0.3;
+            ctx.beginPath();
+            ctx.moveTo(0, 200);
+            ctx.lineTo(canvas.width, 220);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height - 200);
+            ctx.lineTo(canvas.width, canvas.height - 180);
+            ctx.stroke();
+            ctx.globalAlpha = 1.0;
+        }
+
+        // 6. Header Text
         ctx.textAlign = 'center';
         ctx.fillStyle = 'white';
         ctx.font = "80px 'Ramadhan Amazing', sans-serif";
-        ctx.fillText("Mehfile RabeeE", canvas.width / 2, 120);
+        ctx.fillText("Mehfile RabeeE", canvas.width / 2, selectedTheme.headerY);
         ctx.font = "40px 'Ramadhan Amazing', sans-serif";
-        ctx.fillText("meelad fest", canvas.width / 2, 170);
+        ctx.fillText("meelad fest", canvas.width / 2, selectedTheme.festY);
 
+        // 7. Category & Competition Name
         ctx.font = "bold 28px 'Poppins', sans-serif";
         ctx.fillStyle = '#CCCCCC';
-        ctx.fillText(`${category.name.toUpperCase()} - ${competition.name.toUpperCase()}`, canvas.width / 2, 240);
+        ctx.fillText(`${category.name.toUpperCase()} - ${competition.name.toUpperCase()}`, canvas.width / 2, selectedTheme.categoryY);
 
+        // 8. "WINNERS" Title
         ctx.font = "bold 130px 'Poppins', sans-serif";
         ctx.fillStyle = selectedTheme.accent;
         ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
         ctx.shadowBlur = 10;
         ctx.shadowOffsetX = 5;
         ctx.shadowOffsetY = 5;
-        ctx.fillText('WINNERS', canvas.width / 2, 380);
+        ctx.fillText('WINNERS', canvas.width / 2, selectedTheme.winnersY);
         ctx.shadowBlur = 0;
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 0;
 
+        // 9. Winners List
         const placeOrder = { '1st': 1, '2nd': 2, '3rd': 3 };
         const sortedResults = (competition.results || [])
             .filter(r => r.name)
             .sort((a, b) => (placeOrder[a.place] || 99) - (placeOrder[b.place] || 99));
 
-        let startY = 520;
+        let startY = selectedTheme.listStartY;
         const itemHeight = 150;
         
         sortedResults.forEach((winner) => {
-            ctx.fillStyle = selectedTheme.accent;
+            ctx.fillStyle = selectedTheme.rankCircleColor || selectedTheme.accent; // Use specific rank color if defined
             ctx.beginPath();
             ctx.arc(220, startY - 20, 45, 0, 2 * Math.PI);
             ctx.fill();
 
             const rankNumber = winner.place.charAt(0);
-            ctx.fillStyle = selectedTheme.bg[0];
+            ctx.fillStyle = selectedTheme.bg[0]; // Text color inside circle
             ctx.font = "bold 50px 'Poppins', sans-serif";
             ctx.textAlign = 'center';
             ctx.fillText(rankNumber, 220, startY - 5);
@@ -278,6 +440,7 @@ const generateCompetitionPoster = (compId) => {
             startY += itemHeight;
         });
 
+        // 10. Footer
         ctx.textAlign = 'center';
         ctx.fillStyle = 'white';
         ctx.font = "bold 24px 'Poppins', sans-serif";
@@ -285,12 +448,12 @@ const generateCompetitionPoster = (compId) => {
         ctx.font = "20px 'Poppins', sans-serif";
         ctx.fillText('Muringampurayi, Mukkam', canvas.width / 2, canvas.height - 50);
 
+        // --- Trigger Download ---
         const link = document.createElement('a');
         link.download = `Winners - ${competition.name}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
-    };
-    domeImg.onerror = () => alert("Could not load dome.png to generate poster.");
+    });
 };
 
 
