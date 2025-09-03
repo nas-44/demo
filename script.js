@@ -183,177 +183,90 @@ const renderPublicView = () => {
 
 // --- Admin Actions ---
 
-/**
- * NEW: Professional Competition Poster Generator with Enhanced Designs
- * Creates a visually appealing poster for a competition's winners with randomized, diverse themes.
- */
 const generateCompetitionPoster = (compId) => {
+    // This function remains the same as the previous version
     const competition = (data.competitions || []).find(c => c.id === compId);
     const category = (data.categories || []).find(c => c.id === competition.categoryId);
     if (!competition) {
         alert("Competition data not found.");
         return;
     }
-
     const canvas = document.getElementById('poster-canvas');
     canvas.width = 1080;
     canvas.height = 1080;
     const ctx = canvas.getContext('2d');
-
-    // Load ALL potential background images
     const domeImg = new Image();
-    domeImg.src = 'dome.png'; 
+    domeImg.src = 'dome.png';
     const bgPatternImg = new Image();
     bgPatternImg.src = 'bg.png';
     const mosqueBg1Img = new Image();
-    mosqueBg1Img.src = 'mosque_bg_1.jpg'; // Your first new image
+    mosqueBg1Img.src = 'mosque_bg_1.jpg';
     const mosqueBg2Img = new Image();
-    mosqueBg2Img.src = 'mosque_bg_2.jpg'; // Your second new image
-
-    // Enhanced Themes Array
+    mosqueBg2Img.src = 'mosque_bg_2.jpg';
     const themes = [
-        // Theme 1: Dark Blue/Gold - Original style (with dome.png)
-        { 
-            name: "Original Dome Dark",
-            bg: ['#232526', '#414345'], accent: '#FFD700', 
-            primaryBgImage: domeImg, primaryBgAlpha: 0.15, primaryBgOffset: 150, 
-            headerY: 120, festY: 170, categoryY: 240, winnersY: 380, listStartY: 520, 
-            hasPatternOverlay: false,
-            rankCircleColor: null // Default to accent
-        },
-        // Theme 2: Radiant Gradient with Subtle Texture (with bg.png)
-        { 
-            name: "Radiant Texture",
-            bg: ['#121212', '#333333', '#555555'], accent: '#00F0FF', 
-            primaryBgImage: bgPatternImg, primaryBgAlpha: 0.1, primaryBgOffset: 0, 
-            headerY: 120, festY: 170, categoryY: 240, winnersY: 380, listStartY: 520, 
-            hasPatternOverlay: false, // bgPatternImg is the primary here
-            rankCircleColor: 'rgba(0, 240, 255, 0.2)' 
-        },
-        // Theme 3: Deep Purple & Pink with Abstract Shape (no specific image)
-        { 
-            name: "Abstract Purple",
-            bg: ['#3A1C71', '#D76D77', '#FFAF7B'], accent: '#FFEFB3', 
-            primaryBgImage: null, primaryBgAlpha: 0, primaryBgOffset: 0, 
-            abstractShape: true, 
-            headerY: 100, festY: 150, categoryY: 210, winnersY: 330, listStartY: 480, 
-            hasPatternOverlay: false,
-            rankCircleColor: null
-        },
-        // Theme 4: Modern Dark with Sharp Lines (subtle dome.png)
-        { 
-            name: "Modern Lines",
-            bg: ['#0A0A0A', '#1A1A1A'], accent: '#A0FF90', 
-            primaryBgImage: domeImg, primaryBgAlpha: 0.05, primaryBgOffset: 200, 
-            headerY: 110, festY: 160, categoryY: 230, winnersY: 360, listStartY: 500, 
-            hasPatternOverlay: false,
-            decorativeLines: true,
-            rankCircleColor: null
-        },
-        // NEW Theme 5: Using mosque_bg_1.jpg as a subtle background
-        {
-            name: "Mosque BG 1 Subtle",
-            bg: ['#0C1420', '#1A293A'], accent: '#FFEB00',
-            primaryBgImage: mosqueBg1Img, primaryBgAlpha: 0.1, primaryBgOffset: 0,
-            primaryBgMode: 'cover', // Scale to cover the canvas
-            headerY: 120, festY: 170, categoryY: 240, winnersY: 380, listStartY: 520,
-            hasPatternOverlay: false,
-            rankCircleColor: 'rgba(255, 235, 0, 0.2)'
-        },
-        // NEW Theme 6: Using mosque_bg_2.jpg with a darker overlay
-        {
-            name: "Mosque BG 2 Overlay",
-            bg: ['#000000', '#1C0000'], accent: '#EEA236', // Deep red/black with orange accent
-            primaryBgImage: mosqueBg2Img, primaryBgAlpha: 0.2, primaryBgOffset: 0,
-            primaryBgMode: 'cover',
-            headerY: 120, festY: 170, categoryY: 240, winnersY: 380, listStartY: 520,
-            hasPatternOverlay: true, patternAlpha: 0.05, // Can combine with bg.png if desired
-            rankCircleColor: 'rgba(238, 162, 54, 0.3)'
-        },
-        // NEW Theme 7: Mosque BG 1 prominent, with color shift
-        {
-            name: "Mosque BG 1 Prominent",
-            bg: ['#000D1A', '#000000'], accent: '#FFFFFF', // Very dark blue/black
-            primaryBgImage: mosqueBg1Img, primaryBgAlpha: 0.35, primaryBgOffset: 0,
-            primaryBgMode: 'cover',
-            primaryBgFilter: 'grayscale(60%) brightness(80%)', // Apply filter for effect
-            headerY: 120, festY: 170, categoryY: 240, winnersY: 380, listStartY: 520,
-            hasPatternOverlay: false,
-            rankCircleColor: 'rgba(255, 255, 255, 0.2)'
-        }
+        { name: "Original Dome Dark", bg: ['#232526', '#414345'], accent: '#FFD700', primaryBgImage: domeImg, primaryBgAlpha: 0.15, primaryBgOffset: 150, headerY: 120, festY: 170, categoryY: 240, winnersY: 380, listStartY: 520, hasPatternOverlay: false, rankCircleColor: null },
+        { name: "Radiant Texture", bg: ['#121212', '#333333', '#555555'], accent: '#00F0FF', primaryBgImage: bgPatternImg, primaryBgAlpha: 0.1, primaryBgOffset: 0, headerY: 120, festY: 170, categoryY: 240, winnersY: 380, listStartY: 520, hasPatternOverlay: false, rankCircleColor: 'rgba(0, 240, 255, 0.2)' },
+        { name: "Abstract Purple", bg: ['#3A1C71', '#D76D77', '#FFAF7B'], accent: '#FFEFB3', primaryBgImage: null, primaryBgAlpha: 0, primaryBgOffset: 0, abstractShape: true, headerY: 100, festY: 150, categoryY: 210, winnersY: 330, listStartY: 480, hasPatternOverlay: false, rankCircleColor: null },
+        { name: "Modern Lines", bg: ['#0A0A0A', '#1A1A1A'], accent: '#A0FF90', primaryBgImage: domeImg, primaryBgAlpha: 0.05, primaryBgOffset: 200, headerY: 110, festY: 160, categoryY: 230, winnersY: 360, listStartY: 500, hasPatternOverlay: false, decorativeLines: true, rankCircleColor: null },
+        { name: "Mosque BG 1 Subtle", bg: ['#0C1420', '#1A293A'], accent: '#FFEB00', primaryBgImage: mosqueBg1Img, primaryBgAlpha: 0.1, primaryBgOffset: 0, primaryBgMode: 'cover', headerY: 120, festY: 170, categoryY: 240, winnersY: 380, listStartY: 520, hasPatternOverlay: false, rankCircleColor: 'rgba(255, 235, 0, 0.2)' },
+        { name: "Mosque BG 2 Overlay", bg: ['#000000', '#1C0000'], accent: '#EEA236', primaryBgImage: mosqueBg2Img, primaryBgAlpha: 0.2, primaryBgOffset: 0, primaryBgMode: 'cover', headerY: 120, festY: 170, categoryY: 240, winnersY: 380, listStartY: 520, hasPatternOverlay: true, patternAlpha: 0.05, rankCircleColor: 'rgba(238, 162, 54, 0.3)' },
+        { name: "Mosque BG 1 Prominent", bg: ['#000D1A', '#000000'], accent: '#FFFFFF', primaryBgImage: mosqueBg1Img, primaryBgAlpha: 0.35, primaryBgOffset: 0, primaryBgMode: 'cover', primaryBgFilter: 'grayscale(60%) brightness(80%)', headerY: 120, festY: 170, categoryY: 240, winnersY: 380, listStartY: 520, hasPatternOverlay: false, rankCircleColor: 'rgba(255, 255, 255, 0.2)' }
     ];
     const selectedTheme = themes[Math.floor(Math.random() * themes.length)];
-
-    // Load images and then draw
     Promise.all([
         new Promise(resolve => { domeImg.onload = resolve; domeImg.onerror = resolve; }), 
         new Promise(resolve => { bgPatternImg.onload = resolve; bgPatternImg.onerror = resolve; }),
         new Promise(resolve => { mosqueBg1Img.onload = resolve; mosqueBg1Img.onerror = resolve; }),
         new Promise(resolve => { mosqueBg2Img.onload = resolve; mosqueBg2Img.onerror = resolve; })
     ]).then(() => {
-        // 1. Background Gradient
         const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
         selectedTheme.bg.forEach((color, index) => {
             gradient.addColorStop(index / (selectedTheme.bg.length - 1 || 1), color);
         });
         ctx.fillStyle = gradient;
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-        // 2. Primary Background Image (Mosque images or dome/pattern as per theme)
         if (selectedTheme.primaryBgImage && selectedTheme.primaryBgImage.complete && selectedTheme.primaryBgImage.naturalWidth > 0) {
-            ctx.save(); // Save context to apply transformations/filters
+            ctx.save(); 
             ctx.globalAlpha = selectedTheme.primaryBgAlpha;
-
-            // Apply filters if specified
             if (selectedTheme.primaryBgFilter) {
                 ctx.filter = selectedTheme.primaryBgFilter;
             }
-
             if (selectedTheme.primaryBgMode === 'cover') {
                 const img = selectedTheme.primaryBgImage;
                 const imgAspectRatio = img.naturalWidth / img.naturalHeight;
                 const canvasAspectRatio = canvas.width / canvas.height;
-
-                let sx, sy, sWidth, sHeight; // Source rectangle
-                let dx, dy, dWidth, dHeight; // Destination rectangle
-
-                if (imgAspectRatio > canvasAspectRatio) { // Image is wider than canvas
+                let sx, sy, sWidth, sHeight;
+                let dx, dy, dWidth, dHeight;
+                if (imgAspectRatio > canvasAspectRatio) {
                     sHeight = img.naturalHeight;
                     sWidth = sHeight * canvasAspectRatio;
                     sx = (img.naturalWidth - sWidth) / 2;
                     sy = 0;
-                } else { // Image is taller than canvas
+                } else {
                     sWidth = img.naturalWidth;
                     sHeight = sWidth / canvasAspectRatio;
                     sx = 0;
                     sy = (img.naturalHeight - sHeight) / 2;
                 }
-
                 dx = 0;
-                dy = selectedTheme.primaryBgOffset || 0; // Use offset for destination Y
+                dy = selectedTheme.primaryBgOffset || 0;
                 dWidth = canvas.width;
                 dHeight = canvas.height;
-
                 ctx.drawImage(img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
-            } else { // Default behavior (for dome.png specifically)
+            } else {
                 const img = selectedTheme.primaryBgImage;
-                const imgWidth = 800; // Consistent width for dome
+                const imgWidth = 800;
                 const imgHeight = imgWidth * (img.naturalHeight / img.naturalWidth);
                 ctx.drawImage(img, (canvas.width - imgWidth) / 2, canvas.height - imgHeight + (selectedTheme.primaryBgOffset || 0), imgWidth, imgHeight);
             }
-            
-            ctx.restore(); // Restore context to remove filters/transformations
-            ctx.globalAlpha = 1.0; // Reset alpha
+            ctx.restore();
+            ctx.globalAlpha = 1.0;
         }
-
-        // 3. Optional Pattern Overlay (using bg.png if not primary)
         if (selectedTheme.hasPatternOverlay && bgPatternImg.complete && bgPatternImg.naturalWidth > 0 && selectedTheme.primaryBgImage !== bgPatternImg) {
             ctx.globalAlpha = selectedTheme.patternAlpha;
             ctx.drawImage(bgPatternImg, 0, 0, canvas.width, canvas.height);
             ctx.globalAlpha = 1.0;
         }
-
-        // 4. Optional Abstract Shape
         if (selectedTheme.abstractShape) {
             ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
             ctx.beginPath();
@@ -365,8 +278,6 @@ const generateCompetitionPoster = (compId) => {
             ctx.closePath();
             ctx.fill();
         }
-
-        // 5. Decorative Lines (if applicable for theme)
         if (selectedTheme.decorativeLines) {
             ctx.strokeStyle = selectedTheme.accent;
             ctx.lineWidth = 3;
@@ -381,21 +292,15 @@ const generateCompetitionPoster = (compId) => {
             ctx.stroke();
             ctx.globalAlpha = 1.0;
         }
-
-        // 6. Header Text
         ctx.textAlign = 'center';
         ctx.fillStyle = 'white';
         ctx.font = "80px 'Ramadhan Amazing', sans-serif";
         ctx.fillText("Mehfile RabeeE", canvas.width / 2, selectedTheme.headerY);
         ctx.font = "40px 'Ramadhan Amazing', sans-serif";
         ctx.fillText("meelad fest", canvas.width / 2, selectedTheme.festY);
-
-        // 7. Category & Competition Name
         ctx.font = "bold 28px 'Poppins', sans-serif";
         ctx.fillStyle = '#CCCCCC';
         ctx.fillText(`${category.name.toUpperCase()} - ${competition.name.toUpperCase()}`, canvas.width / 2, selectedTheme.categoryY);
-
-        // 8. "WINNERS" Title
         ctx.font = "bold 130px 'Poppins', sans-serif";
         ctx.fillStyle = selectedTheme.accent;
         ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
@@ -406,41 +311,171 @@ const generateCompetitionPoster = (compId) => {
         ctx.shadowBlur = 0;
         ctx.shadowOffsetX = 0;
         ctx.shadowOffsetY = 0;
-
-        // 9. Winners List
         const placeOrder = { '1st': 1, '2nd': 2, '3rd': 3 };
         const sortedResults = (competition.results || [])
             .filter(r => r.name)
             .sort((a, b) => (placeOrder[a.place] || 99) - (placeOrder[b.place] || 99));
-
         let startY = selectedTheme.listStartY;
         const itemHeight = 150;
-        
         sortedResults.forEach((winner) => {
-            ctx.fillStyle = selectedTheme.rankCircleColor || selectedTheme.accent; // Use specific rank color if defined
+            ctx.fillStyle = selectedTheme.rankCircleColor || selectedTheme.accent;
             ctx.beginPath();
             ctx.arc(220, startY - 20, 45, 0, 2 * Math.PI);
             ctx.fill();
-
             const rankNumber = winner.place.charAt(0);
-            ctx.fillStyle = selectedTheme.bg[0]; // Text color inside circle
+            ctx.fillStyle = selectedTheme.bg[0];
             ctx.font = "bold 50px 'Poppins', sans-serif";
             ctx.textAlign = 'center';
             ctx.fillText(rankNumber, 220, startY - 5);
-
             ctx.fillStyle = 'white';
             ctx.textAlign = 'left';
             ctx.font = "60px 'Poppins', sans-serif";
             ctx.fillText(winner.name.toUpperCase(), 300, startY);
-
             ctx.font = "30px 'Poppins', sans-serif";
             ctx.fillStyle = '#DDDDDD';
             ctx.fillText((winner.team || '').toUpperCase(), 300, startY + 40);
+            startY += itemHeight;
+        });
+        ctx.textAlign = 'center';
+        ctx.fillStyle = 'white';
+        ctx.font = "bold 24px 'Poppins', sans-serif";
+        ctx.fillText('HAYATHUL ISLAM HIGHER SECONDARY MADRASA', canvas.width / 2, canvas.height - 80);
+        ctx.font = "20px 'Poppins', sans-serif";
+        ctx.fillText('Muringampurayi, Mukkam', canvas.width / 2, canvas.height - 50);
+        const link = document.createElement('a');
+        link.download = `Winners - ${competition.name}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    });
+};
+
+/**
+ * NEW: Generates a poster for the overall team leaderboard.
+ */
+const generateOverallScorePoster = () => {
+    const scores = calculateTeamScores();
+    const topTeams = scores.overall.slice(0, 3); // Get top 3 teams
+
+    if (topTeams.length === 0) {
+        alert("No team scores available to generate a poster.");
+        return;
+    }
+
+    const canvas = document.getElementById('poster-canvas');
+    canvas.width = 1080;
+    canvas.height = 1080; // Square format is good for leaderboards
+    const ctx = canvas.getContext('2d');
+
+    // Load new background images
+    const bg1 = new Image();
+    bg1.src = 'bg1.jpg';
+    const bg2 = new Image();
+    bg2.src = 'bg2.jpg';
+    const bg3 = new Image();
+    bg3.src = 'bg3.jpg';
+    const allBackgrounds = [bg1, bg2, bg3];
+
+    // Define themes for the team poster
+    const themes = [
+        {
+            bgColors: ['#000000', '#2C3E50'],
+            accent: '#F1C40F', // Gold
+            titleColor: '#FFFFFF',
+            textColor: '#ECF0F1'
+        },
+        {
+            bgColors: ['#4A00E0', '#8E2DE2'],
+            accent: '#FFFFFF', // White
+            titleColor: '#FFFFFF',
+            textColor: '#F2F2F2'
+        },
+        {
+            bgColors: ['#1e3c72', '#2a5298'],
+            accent: '#2980B9', // Lighter Blue
+            titleColor: '#FFFFFF',
+            textColor: '#EAEAEA'
+        }
+    ];
+
+    const selectedTheme = themes[Math.floor(Math.random() * themes.length)];
+    const selectedBgImage = allBackgrounds[Math.floor(Math.random() * allBackgrounds.length)];
+
+    selectedBgImage.onload = () => {
+        // --- Start Drawing ---
+
+        // 1. Background Image
+        ctx.save();
+        ctx.globalAlpha = 0.3; // Make it subtle
+        // Cover canvas with the image
+        const imgAspectRatio = selectedBgImage.naturalWidth / selectedBgImage.naturalHeight;
+        const canvasAspectRatio = canvas.width / canvas.height;
+        let sx = 0, sy = 0, sWidth = selectedBgImage.naturalWidth, sHeight = selectedBgImage.naturalHeight;
+        if (imgAspectRatio > canvasAspectRatio) {
+            sWidth = sHeight * canvasAspectRatio;
+            sx = (selectedBgImage.naturalWidth - sWidth) / 2;
+        } else {
+            sHeight = sWidth / canvasAspectRatio;
+            sy = (selectedBgImage.naturalHeight - sHeight) / 2;
+        }
+        ctx.drawImage(selectedBgImage, sx, sy, sWidth, sHeight, 0, 0, canvas.width, canvas.height);
+        ctx.globalAlpha = 1.0;
+        ctx.restore();
+
+        // 2. Color Gradient Overlay
+        const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+        gradient.addColorStop(0, selectedTheme.bgColors[0] + 'B3'); // 70% opacity
+        gradient.addColorStop(1, selectedTheme.bgColors[1] + 'B3'); // 70% opacity
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // 3. Header Text
+        ctx.textAlign = 'center';
+        ctx.fillStyle = selectedTheme.titleColor;
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+        ctx.shadowBlur = 10;
+        ctx.font = "100px 'Ramadhan Amazing', sans-serif";
+        ctx.fillText("Mehfile RabeeE", canvas.width / 2, 140);
+        ctx.font = "60px 'Ramadhan Amazing', sans-serif";
+        ctx.fillText("meelad fest", canvas.width / 2, 210);
+
+        // 4. Main Title
+        ctx.font = "bold 110px 'Poppins', sans-serif";
+        ctx.fillStyle = selectedTheme.accent;
+        ctx.fillText('Team Leaderboard', canvas.width / 2, 350);
+        ctx.shadowBlur = 0;
+        
+        // 5. Leaderboard Items
+        let startY = 480;
+        const itemHeight = 160;
+        const places = ['1st', '2nd', '3rd'];
+
+        topTeams.forEach((team, index) => {
+            const [teamName, score] = team;
+
+            // Background rect for each item
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            ctx.fillRect(100, startY - 60, canvas.width - 200, 120);
+
+            // Rank
+            ctx.font = "bold 80px 'Poppins', sans-serif";
+            ctx.fillStyle = selectedTheme.accent;
+            ctx.textAlign = 'left';
+            ctx.fillText(places[index], 140, startY + 25);
+
+            // Team Name
+            ctx.font = "60px 'Poppins', sans-serif";
+            ctx.fillStyle = selectedTheme.textColor;
+            ctx.fillText(teamName.toUpperCase(), 320, startY);
+
+            // Score
+            ctx.font = "30px 'Poppins', sans-serif";
+            ctx.fillStyle = '#CCCCCC';
+            ctx.fillText(`${score} Points`, 320, startY + 45);
 
             startY += itemHeight;
         });
 
-        // 10. Footer
+        // 6. Footer
         ctx.textAlign = 'center';
         ctx.fillStyle = 'white';
         ctx.font = "bold 24px 'Poppins', sans-serif";
@@ -450,12 +485,62 @@ const generateCompetitionPoster = (compId) => {
 
         // --- Trigger Download ---
         const link = document.createElement('a');
-        link.download = `Winners - ${competition.name}.png`;
+        link.download = `Team-Leaderboard-Poster.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
-    });
+    };
+
+    selectedBgImage.onerror = () => {
+        alert("A background image failed to load. Please try again.");
+    };
 };
 
+/**
+ * NEW: Downloads all entries for the currently selected category as an Excel file.
+ */
+const downloadCategoryEntries = () => {
+    if (!currentCategory) {
+        alert("Please select a category first.");
+        return;
+    }
+
+    const categoryCompetitions = (data.competitions || []).filter(comp => comp.categoryId === currentCategory.id);
+
+    if (categoryCompetitions.length === 0) {
+        alert(`No competitions found for the category: ${currentCategory.name}`);
+        return;
+    }
+
+    // Prepare data for Excel
+    const excelData = [];
+    excelData.push(['Competition', 'Place', 'Student Name', 'Class', 'Team']); // Header row
+
+    categoryCompetitions.forEach(comp => {
+        if (comp.results && comp.results.length > 0) {
+            comp.results.forEach(res => {
+                excelData.push([
+                    comp.name || '',
+                    res.place || '',
+                    res.name || '',
+                    res.class || '',
+                    res.team || ''
+                ]);
+            });
+        } else {
+            excelData.push([comp.name, '(No results entered)', '', '', '']);
+        }
+    });
+
+    // Create a new workbook and a worksheet
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(excelData);
+
+    // Append the worksheet to the workbook
+    XLSX.utils.book_append_sheet(wb, ws, 'Entries');
+
+    // Generate and download the Excel file
+    XLSX.writeFile(wb, `${currentCategory.name}_Entries.xlsx`);
+};
 
 const handlePublishToggle = (id) => {
     const comp = (data.competitions || []).find(c => c.id == id);
@@ -542,6 +627,12 @@ const setupEventListeners = () => {
 
     addCategoryBtn.addEventListener('click', () => addCategoryForm.classList.toggle('hidden'));
     addTeamBtn.addEventListener('click', () => addTeamForm.classList.toggle('hidden'));
+
+    // NEW event listener for the team poster button
+    document.getElementById('generate-overall-poster-btn').addEventListener('click', generateOverallScorePoster);
+    // NEW event listener for the download button
+    document.getElementById('download-entries-btn').addEventListener('click', downloadCategoryEntries);
+
 
     submitCategoryBtn.addEventListener('click', () => {
         const name = categoryNameInput.value.trim();
